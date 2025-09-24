@@ -1,0 +1,40 @@
+name: actions-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  TEST: ABCDEFG
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    #env: 
+
+    steps:
+    - name: release test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: "actions-build"
+        FILE: "release.txt"
+      shell: bash
+      run: |
+        echo TEST RELEASE > "$FILE"
+        gh release list --repo "$GITHUB_REPOSITORY"
+        if gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes; then
+          echo "test"
+        else
+          echo "No existing release to delete"
+        fi
+        gh release create "$TAG" "$FILE" \
+          --title "actions-build" \
+          --notes "Automated build from GitHub Actions" \
+          --prerelease \
+          --target "$GITHUB_SHA" \
+          --repo "$GITHUB_REPOSITORY"
+        gh release list --repo "$GITHUB_REPOSITORY"
